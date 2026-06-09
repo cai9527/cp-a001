@@ -4,6 +4,7 @@ import { Wind, User, Lock, RefreshCw, Eye, EyeOff, AlertCircle } from 'lucide-re
 import { useAppStore } from '@/store';
 import { authApi } from '@/services/api';
 import { cn } from '@/lib/utils';
+import Modal from '@/components/Modal';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ export default function Login() {
   const [captchaImage, setCaptchaImage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [showErrorModal, setShowErrorModal] = useState(false);
 
   const fetchCaptcha = useCallback(async () => {
     try {
@@ -24,6 +26,7 @@ export default function Login() {
       setCaptchaImage(result.image);
     } catch (err) {
       setError((err as Error).message);
+      setShowErrorModal(true);
     }
   }, []);
 
@@ -37,20 +40,30 @@ export default function Login() {
     fetchCaptcha();
   }, [fetchCaptcha]);
 
+  const showError = (message: string) => {
+    setError(message);
+    setShowErrorModal(true);
+  };
+
+  const handleCloseErrorModal = () => {
+    setShowErrorModal(false);
+    setError('');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
     if (!username.trim()) {
-      setError('请输入账号');
+      showError('请输入账号');
       return;
     }
     if (!password.trim()) {
-      setError('请输入密码');
+      showError('请输入密码');
       return;
     }
     if (!captcha.trim()) {
-      setError('请输入验证码');
+      showError('请输入验证码');
       return;
     }
 
@@ -58,7 +71,7 @@ export default function Login() {
       await login({ username, password, captcha, captchaId });
       navigate('/dashboard', { replace: true });
     } catch (err) {
-      setError((err as Error).message);
+      showError((err as Error).message);
       fetchCaptcha();
       setCaptcha('');
     }
@@ -87,12 +100,6 @@ export default function Login() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {error && (
-              <div className="flex items-center gap-2 px-4 py-3 bg-danger-50 text-danger-600 rounded-lg text-sm animate-fade-in">
-                <AlertCircle size={16} />
-                <span>{error}</span>
-              </div>
-            )}
 
             <div>
               <label className="block text-sm font-medium text-dark-500 mb-2">账号</label>
@@ -195,6 +202,30 @@ export default function Login() {
           © {new Date().getFullYear()} 扬尘监测系统. All rights reserved.
         </p>
       </div>
+
+      <Modal
+        open={showErrorModal}
+        title="登录提示"
+        onClose={handleCloseErrorModal}
+        width="max-w-sm"
+      >
+        <div className="py-4">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-full bg-danger-100 flex items-center justify-center flex-shrink-0">
+              <AlertCircle size={20} className="text-danger-500" />
+            </div>
+            <p className="text-dark-600 text-sm">{error}</p>
+          </div>
+          <div className="flex justify-end">
+            <button
+              onClick={handleCloseErrorModal}
+              className="px-5 py-2 text-sm font-medium text-white bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors"
+            >
+              我知道了
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

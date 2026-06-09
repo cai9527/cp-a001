@@ -31,6 +31,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   user: [
     PERMISSIONS.VIEW_DEVICES,
     PERMISSIONS.VIEW_REALTIME,
+    PERMISSIONS.UPDATE_DEVICE,
   ],
 };
 
