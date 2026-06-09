@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction } from 'express'
+
 import { tokenMap } from '../routes/auth.js'
 import { ROLE_PERMISSIONS, type Permission, type UserRole } from '../../shared/types'
 

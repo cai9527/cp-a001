@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store';
 import { PERMISSIONS, type Device, type CreateDeviceRequest } from '../../shared/types';
-import { ArrowLeft, Edit2, MapPin, Cpu, Wifi, Clock, Settings, Network } from 'lucide-react';
+import { ArrowLeft, Edit2, MapPin, Cpu, Wifi, Clock, Settings, Network, CheckCircle, AlertCircle } from 'lucide-react';
 import { DeviceStatusBadge, DataStatusBadge } from '@/components/StatusBadge';
 import Modal from '@/components/Modal';
 import DeviceForm from '@/components/DeviceForm';
@@ -14,6 +14,9 @@ export default function DeviceDetail() {
   const { user, fetchDeviceById, updateDevice, fetchMonitoringData, monitoringData, loading } = useAppStore();
   const [device, setDevice] = useState<Device | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const canUpdate = hasPermission(user?.role, PERMISSIONS.UPDATE_DEVICE);
 
@@ -28,10 +31,16 @@ export default function DeviceDetail() {
 
   const handleUpdate = async (data: CreateDeviceRequest) => {
     if (id) {
-      await updateDevice(id, data);
-      const updated = await fetchDeviceById(id);
-      if (updated) setDevice(updated);
-      setShowEditModal(false);
+      try {
+        await updateDevice(id, data);
+        const updated = await fetchDeviceById(id);
+        if (updated) setDevice(updated);
+        setShowEditModal(false);
+        setShowSuccessModal(true);
+      } catch (err) {
+        setErrorMessage((err as Error).message);
+        setShowErrorModal(true);
+      }
     }
   };
 
@@ -204,6 +213,54 @@ export default function DeviceDetail() {
           onCancel={() => setShowEditModal(false)}
           loading={loading}
         />
+      </Modal>
+
+      <Modal
+        open={showSuccessModal}
+        title="操作成功"
+        onClose={() => setShowSuccessModal(false)}
+        width="max-w-sm"
+      >
+        <div className="py-4">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-full bg-success-100 flex items-center justify-center flex-shrink-0">
+              <CheckCircle size={20} className="text-success-500" />
+            </div>
+            <p className="text-dark-600 text-sm">设备信息已成功保存！</p>
+          </div>
+          <div className="flex justify-end">
+            <button
+              onClick={() => setShowSuccessModal(false)}
+              className="px-5 py-2 text-sm font-medium text-white bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors"
+            >
+              确定
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        open={showErrorModal}
+        title="操作失败"
+        onClose={() => setShowErrorModal(false)}
+        width="max-w-sm"
+      >
+        <div className="py-4">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-full bg-danger-100 flex items-center justify-center flex-shrink-0">
+              <AlertCircle size={20} className="text-danger-500" />
+            </div>
+            <p className="text-dark-600 text-sm">{errorMessage}</p>
+          </div>
+          <div className="flex justify-end">
+            <button
+              onClick={() => setShowErrorModal(false)}
+              className="px-5 py-2 text-sm font-medium text-white bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors"
+            >
+              确定
+            </button>
+          </div>
+        </div>
       </Modal>
     </div>
   );
