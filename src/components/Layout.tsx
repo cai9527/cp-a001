@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Cpu,
@@ -9,8 +9,10 @@ import {
   Menu,
   ChevronLeft,
   Wind,
+  LogOut,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAppStore } from '@/store';
 
 const navItems = [
   { path: '/dashboard', label: '数据监测', icon: LayoutDashboard },
@@ -21,6 +23,13 @@ const navItems = [
 export default function Layout() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAppStore();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login', { replace: true });
+  };
 
   return (
     <div className="flex h-screen bg-dark-50">
@@ -105,7 +114,14 @@ export default function Layout() {
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center">
                 <User size={16} className="text-white" />
               </div>
-              <span className="text-sm font-medium text-dark-500">管理员</span>
+              <span className="text-sm font-medium text-dark-500">{user?.nickname || '用户'}</span>
+              <button
+                onClick={handleLogout}
+                className="ml-2 p-2 text-dark-400 hover:text-danger-500 hover:bg-danger-50 rounded-lg transition-colors"
+                title="退出登录"
+              >
+                <LogOut size={16} />
+              </button>
             </div>
           </div>
         </header>

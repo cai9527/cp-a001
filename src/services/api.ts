@@ -7,6 +7,9 @@ import type {
   UpdateDeviceRequest,
   PaginatedResponse,
   ApiResponse,
+  LoginRequest,
+  LoginResponse,
+  CaptchaResponse,
 } from '../../shared/types';
 
 const API_BASE = '/api';
@@ -78,5 +81,24 @@ export const statsApi = {
 
   getArea: () => {
     return request<AreaStats[]>('/stats/area');
+  },
+};
+
+export const authApi = {
+  getCaptcha: () => {
+    return request<CaptchaResponse>('/auth/captcha');
+  },
+
+  login: (data: LoginRequest) => {
+    return request<LoginResponse>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  logout: () => {
+    return request<null>('/auth/logout', {
+      method: 'POST',
+    });
   },
 };

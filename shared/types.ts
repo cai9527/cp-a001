@@ -77,3 +77,27 @@ export interface PaginatedResponse<T> {
   page: number;
   pageSize: number;
 }
+
+export interface LoginRequest {
+  username: string;
+  password: string;
+  captcha: string;
+  captchaId: string;
+}
+
+export interface LoginResponse {
+  token: string;
+  user: UserInfo;
+}
+
+export interface UserInfo {
+  id: string;
+  username: string;
+  nickname: string;
+  role: string;
+}
+
+export interface CaptchaResponse {
+  captchaId: string;
+  image: string;
+}
