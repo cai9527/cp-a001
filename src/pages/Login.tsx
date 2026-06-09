@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Wind, User, Lock, RefreshCw, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { useAppStore } from '@/store';
-import { authApi } from '@/services/api';
+import { authApi } from '@/services';
 import { cn } from '@/lib/utils';
 import Modal from '@/components/Modal';
 

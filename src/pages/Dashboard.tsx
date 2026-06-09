@@ -8,49 +8,14 @@ import {
   Wind,
   CloudRain,
   Volume2,
-  TrendingUp,
   CheckCircle2,
   AlertCircle,
   XCircle,
   RefreshCw,
 } from 'lucide-react';
 import { DeviceStatusBadge, DataStatusBadge } from '@/components/StatusBadge';
+import StatCard from '@/components/StatCard';
 import { cn } from '@/lib/utils';
-
-interface StatCardProps {
-  title: string;
-  value: string | number;
-  unit?: string;
-  icon: React.ComponentType<any>;
-  color: string;
-  trend?: string;
-  trendUp?: boolean;
-}
-
-function StatCard({ title, value, unit, icon: Icon, color, trend, trendUp }: StatCardProps) {
-  return (
-    <div className="bg-white rounded-xl p-5 shadow-card hover:shadow-card-hover transition-all duration-300">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm text-dark-400 mb-1">{title}</p>
-          <div className="flex items-baseline gap-1">
-            <span className="text-3xl font-bold text-dark-600">{value}</span>
-            {unit && <span className="text-sm text-dark-400">{unit}</span>}
-          </div>
-          {trend && (
-            <div className={cn('flex items-center gap-1 mt-2 text-xs', trendUp ? 'text-success-600' : 'text-danger-600')}>
-              <TrendingUp size={12} className={cn(!trendUp && 'rotate-180')} />
-              <span>{trend}</span>
-            </div>
-          )}
-        </div>
-        <div className={cn('w-12 h-12 rounded-xl flex items-center justify-center', color)}>
-          <Icon size={22} className="text-white" />
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default function Dashboard() {
   const { overviewStats, areaStats, monitoringData, fetchAllData } = useAppStore();

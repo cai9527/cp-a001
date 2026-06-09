@@ -6,6 +6,7 @@ import BarChart from '@/components/charts/BarChart';
 import PieChart from '@/components/charts/PieChart';
 import HeatmapChart from '@/components/charts/HeatmapChart';
 import ChartCard from '@/components/charts/ChartCard';
+import StatCard from '@/components/StatCard';
 import {
   Cpu,
   Wifi,
@@ -13,52 +14,11 @@ import {
   Wind,
   CloudRain,
   Volume2,
-  TrendingUp,
-  TrendingDown,
   Activity,
   BarChart3,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { MetricType, TimeRange, DataStatus } from '../../shared/types';
-
-interface StatCardProps {
-  title: string;
-  value: string | number;
-  unit?: string;
-  icon: React.ComponentType<any>;
-  color: string;
-  trend?: number;
-  trendLabel?: string;
-}
-
-function StatCard({ title, value, unit, icon: Icon, color, trend, trendLabel }: StatCardProps) {
-  const trendUp = trend !== undefined && trend >= 0;
-  return (
-    <div className="bg-white rounded-2xl shadow-card hover:shadow-card-hover transition-all duration-300 border border-dark-50 p-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm text-dark-400 mb-1.5">{title}</p>
-          <div className="flex items-baseline gap-1.5">
-            <span className="text-2xl xl:text-3xl font-bold text-dark-600">{value}</span>
-            {unit && <span className="text-sm text-dark-400">{unit}</span>}
-          </div>
-          {trend !== undefined && (
-            <div className={cn('flex items-center gap-1 mt-2.5 text-xs font-medium', trendUp ? 'text-danger-600' : 'text-success-600')}>
-              {trendUp ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
-              <span>
-                {Math.abs(trend).toFixed(1)}%
-                {trendLabel || (trendUp ? '偏高' : '下降')}
-              </span>
-            </div>
-          )}
-        </div>
-        <div className={cn('w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg', color)}>
-          <Icon size={22} className="text-white" />
-        </div>
-      </div>
-    </div>
-  );
-}
 
 const METRIC_CONFIG: Record<MetricType, { label: string; unit: string; threshold: number }> = {
   pm25: { label: 'PM2.5', unit: 'μg/m³', threshold: 75 },
@@ -294,6 +254,7 @@ export default function DataVisualization() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6 3xl:grid-cols-6 gap-4 3xl:gap-5">
         <StatCard
+          variant="bordered"
           title="设备总数"
           value={overviewStats?.totalDevices ?? 0}
           unit="台"
@@ -301,6 +262,7 @@ export default function DataVisualization() {
           color="bg-gradient-to-br from-primary-400 to-primary-600"
         />
         <StatCard
+          variant="bordered"
           title="在线设备"
           value={overviewStats?.onlineDevices ?? 0}
           unit="台"
@@ -308,6 +270,7 @@ export default function DataVisualization() {
           color="bg-gradient-to-br from-success-400 to-success-600"
         />
         <StatCard
+          variant="bordered"
           title="告警设备"
           value={overviewStats?.warningDevices ?? 0}
           unit="台"
@@ -315,6 +278,7 @@ export default function DataVisualization() {
           color="bg-gradient-to-br from-warning-400 to-warning-600"
         />
         <StatCard
+          variant="bordered"
           title="PM2.5 均值"
           value={avgPm25.toFixed(1)}
           unit="μg/m³"
@@ -323,6 +287,7 @@ export default function DataVisualization() {
           trend={calcTrend(avgPm25, METRIC_CONFIG.pm25.threshold)}
         />
         <StatCard
+          variant="bordered"
           title="PM10 均值"
           value={avgPm10.toFixed(1)}
           unit="μg/m³"
@@ -331,6 +296,7 @@ export default function DataVisualization() {
           trend={calcTrend(avgPm10, METRIC_CONFIG.pm10.threshold)}
         />
         <StatCard
+          variant="bordered"
           title="噪音均值"
           value={avgNoise.toFixed(1)}
           unit="dB"

@@ -1,300 +1,62 @@
-import { create } from 'zustand';
-import type {
-  Device,
-  MonitoringData,
-  OverviewStats,
-  AreaStats,
-  CreateDeviceRequest,
-  UpdateDeviceRequest,
-  UserInfo,
-  LoginRequest,
-  DeviceTimeSeries,
-  AreaTimeSeries,
-  StatusDistribution,
-  DeviceStatusDistribution,
-  DeviceHeatmapData,
-  MetricType,
-  TimeRange,
-} from '../../shared/types';
-import { deviceApi, dataApi, statsApi, authApi } from '@/services/api';
+import { useAuthStore } from './authStore';
+import { useDeviceStore } from './deviceStore';
+import { useDataStore } from './dataStore';
+import { useStatsStore } from './statsStore';
 
-interface AppState {
-  devices: Device[];
-  deviceTotal: number;
-  monitoringData: MonitoringData[];
-  overviewStats: OverviewStats | null;
-  areaStats: AreaStats[];
-  loading: boolean;
-  error: string | null;
+export { useAuthStore, useDeviceStore, useDataStore, useStatsStore };
 
-  deviceTimeSeries: DeviceTimeSeries[];
-  areaTimeSeries: AreaTimeSeries[];
-  statusDistribution: StatusDistribution[];
-  deviceStatusDistribution: DeviceStatusDistribution[];
-  heatmapData: DeviceHeatmapData[];
+type CombinedState = ReturnType<typeof useAuthStore.getState>
+  & ReturnType<typeof useDeviceStore.getState>
+  & ReturnType<typeof useDataStore.getState>
+  & ReturnType<typeof useStatsStore.getState>;
 
-  isAuthenticated: boolean;
-  user: UserInfo | null;
-  token: string | null;
-  authLoading: boolean;
+type AppStore = {
+  (): CombinedState;
+  <T>(selector: (state: CombinedState) => T): T;
+  getState: () => CombinedState;
+  setState: (partial: Partial<CombinedState>) => void;
+  subscribe: (listener: (state: CombinedState) => void) => () => void;
+};
 
-  fetchDevices: (params?: { search?: string; area?: string; page?: number; pageSize?: number }) => Promise<void>;
-  fetchDeviceById: (id: string) => Promise<Device | undefined>;
-  createDevice: (data: CreateDeviceRequest) => Promise<void>;
-  updateDevice: (id: string, data: UpdateDeviceRequest) => Promise<void>;
-  deleteDevice: (id: string) => Promise<void>;
-
-  fetchMonitoringData: () => Promise<void>;
-  fetchOverviewStats: () => Promise<void>;
-  fetchAreaStats: () => Promise<void>;
-  fetchAllData: () => Promise<void>;
-
-  fetchDeviceTimeSeries: (params?: { deviceIds?: string[]; timeRange?: TimeRange }) => Promise<void>;
-  fetchAreaTimeSeries: (params?: { areas?: string[]; timeRange?: TimeRange }) => Promise<void>;
-  fetchStatusDistribution: () => Promise<void>;
-  fetchDeviceStatusDistribution: () => Promise<void>;
-  fetchHeatmapData: (params?: { metric?: MetricType; timeRange?: TimeRange; deviceIds?: string[] }) => Promise<void>;
-  fetchAllVisualizationData: (params?: {
-    deviceIds?: string[];
-    areas?: string[];
-    timeRange?: TimeRange;
-    metric?: MetricType;
-  }) => Promise<void>;
-
-  login: (data: LoginRequest) => Promise<void>;
-  logout: () => Promise<void>;
-  initAuth: () => void;
+function useCombinedStore<T>(selector?: (state: CombinedState) => T): T {
+  const authState = useAuthStore();
+  const deviceState = useDeviceStore();
+  const dataState = useDataStore();
+  const statsState = useStatsStore();
+  const combined = {
+    ...authState,
+    ...deviceState,
+    ...dataState,
+    ...statsState,
+  } as CombinedState;
+  return (selector ? selector(combined) : combined) as unknown as T;
 }
 
-export const useAppStore = create<AppState>((set, get) => ({
-  devices: [],
-  deviceTotal: 0,
-  monitoringData: [],
-  overviewStats: null,
-  areaStats: [],
-  loading: false,
-  error: null,
+useCombinedStore.getState = (): CombinedState => ({
+  ...useAuthStore.getState(),
+  ...useDeviceStore.getState(),
+  ...useDataStore.getState(),
+  ...useStatsStore.getState(),
+});
 
-  deviceTimeSeries: [],
-  areaTimeSeries: [],
-  statusDistribution: [],
-  deviceStatusDistribution: [],
-  heatmapData: [],
+useCombinedStore.setState = (partial: Partial<CombinedState>) => {
+  useAuthStore.setState(partial);
+  useDeviceStore.setState(partial);
+  useDataStore.setState(partial);
+  useStatsStore.setState(partial);
+};
 
-  isAuthenticated: false,
-  user: null,
-  token: null,
-  authLoading: false,
+useCombinedStore.subscribe = (listener: (state: CombinedState) => void) => {
+  const unsub1 = useAuthStore.subscribe(listener);
+  const unsub2 = useDeviceStore.subscribe(listener);
+  const unsub3 = useDataStore.subscribe(listener);
+  const unsub4 = useStatsStore.subscribe(listener);
+  return () => {
+    unsub1();
+    unsub2();
+    unsub3();
+    unsub4();
+  };
+};
 
-  fetchDevices: async (params) => {
-    set({ loading: true, error: null });
-    try {
-      const result = await deviceApi.getList(params);
-      set({ devices: result.items, deviceTotal: result.total });
-    } catch (err) {
-      set({ error: (err as Error).message });
-    } finally {
-      set({ loading: false });
-    }
-  },
-
-  fetchDeviceById: async (id) => {
-    set({ loading: true, error: null });
-    try {
-      const device = await deviceApi.getById(id);
-      return device;
-    } catch (err) {
-      set({ error: (err as Error).message });
-      return undefined;
-    } finally {
-      set({ loading: false });
-    }
-  },
-
-  createDevice: async (data) => {
-    set({ loading: true, error: null });
-    try {
-      await deviceApi.create(data);
-      await get().fetchDevices();
-    } catch (err) {
-      set({ error: (err as Error).message });
-      throw err;
-    } finally {
-      set({ loading: false });
-    }
-  },
-
-  updateDevice: async (id, data) => {
-    set({ loading: true, error: null });
-    try {
-      await deviceApi.update(id, data);
-      await get().fetchDevices();
-    } catch (err) {
-      set({ error: (err as Error).message });
-      throw err;
-    } finally {
-      set({ loading: false });
-    }
-  },
-
-  deleteDevice: async (id) => {
-    set({ loading: true, error: null });
-    try {
-      await deviceApi.delete(id);
-      await get().fetchDevices();
-    } catch (err) {
-      set({ error: (err as Error).message });
-      throw err;
-    } finally {
-      set({ loading: false });
-    }
-  },
-
-  fetchMonitoringData: async () => {
-    try {
-      const data = await dataApi.getRealtime();
-      set({ monitoringData: data });
-    } catch (err) {
-      set({ error: (err as Error).message });
-    }
-  },
-
-  fetchOverviewStats: async () => {
-    try {
-      const data = await statsApi.getOverview();
-      set({ overviewStats: data });
-    } catch (err) {
-      set({ error: (err as Error).message });
-    }
-  },
-
-  fetchAreaStats: async () => {
-    try {
-      const data = await statsApi.getArea();
-      set({ areaStats: data });
-    } catch (err) {
-      set({ error: (err as Error).message });
-    }
-  },
-
-  fetchAllData: async () => {
-    await Promise.all([
-      get().fetchMonitoringData(),
-      get().fetchOverviewStats(),
-      get().fetchAreaStats(),
-    ]);
-  },
-
-  fetchDeviceTimeSeries: async (params) => {
-    try {
-      const data = await statsApi.getDeviceTimeSeries(params);
-      set({ deviceTimeSeries: data });
-    } catch (err) {
-      set({ error: (err as Error).message });
-    }
-  },
-
-  fetchAreaTimeSeries: async (params) => {
-    try {
-      const data = await statsApi.getAreaTimeSeries(params);
-      set({ areaTimeSeries: data });
-    } catch (err) {
-      set({ error: (err as Error).message });
-    }
-  },
-
-  fetchStatusDistribution: async () => {
-    try {
-      const data = await statsApi.getStatusDistribution();
-      set({ statusDistribution: data });
-    } catch (err) {
-      set({ error: (err as Error).message });
-    }
-  },
-
-  fetchDeviceStatusDistribution: async () => {
-    try {
-      const data = await statsApi.getDeviceStatusDistribution();
-      set({ deviceStatusDistribution: data });
-    } catch (err) {
-      set({ error: (err as Error).message });
-    }
-  },
-
-  fetchHeatmapData: async (params) => {
-    try {
-      const data = await statsApi.getHeatmap(params);
-      set({ heatmapData: data });
-    } catch (err) {
-      set({ error: (err as Error).message });
-    }
-  },
-
-  fetchAllVisualizationData: async (params) => {
-    await Promise.all([
-      get().fetchMonitoringData(),
-      get().fetchDeviceTimeSeries({ deviceIds: params?.deviceIds, timeRange: params?.timeRange }),
-      get().fetchAreaTimeSeries({ areas: params?.areas, timeRange: params?.timeRange }),
-      get().fetchStatusDistribution(),
-      get().fetchDeviceStatusDistribution(),
-      get().fetchHeatmapData({
-        metric: params?.metric,
-        timeRange: params?.timeRange,
-        deviceIds: params?.deviceIds,
-      }),
-    ]);
-  },
-
-  login: async (data: LoginRequest) => {
-    set({ authLoading: true, error: null });
-    try {
-      const result = await authApi.login(data);
-      localStorage.setItem('auth_token', result.token);
-      localStorage.setItem('auth_user', JSON.stringify(result.user));
-      set({
-        isAuthenticated: true,
-        user: result.user,
-        token: result.token,
-      });
-    } catch (err) {
-      set({ error: (err as Error).message });
-      throw err;
-    } finally {
-      set({ authLoading: false });
-    }
-  },
-
-  logout: async () => {
-    try {
-      await authApi.logout();
-    } catch {
-      // Ignore logout API errors, still clear local state
-    } finally {
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('auth_user');
-      set({
-        isAuthenticated: false,
-        user: null,
-        token: null,
-      });
-    }
-  },
-
-  initAuth: () => {
-    const token = localStorage.getItem('auth_token');
-    const userStr = localStorage.getItem('auth_user');
-    if (token && userStr) {
-      try {
-        const user = JSON.parse(userStr) as UserInfo;
-        set({
-          isAuthenticated: true,
-          user,
-          token,
-        });
-      } catch {
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('auth_user');
-      }
-    }
-  },
-}));
+export const useAppStore = useCombinedStore as unknown as AppStore;
