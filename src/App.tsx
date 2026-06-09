@@ -7,6 +7,8 @@ import DeviceDetail from '@/pages/DeviceDetail';
 import Realtime from '@/pages/Realtime';
 import Login from '@/pages/Login';
 import { useAppStore } from '@/store';
+import { hasPermission } from '@/lib/utils';
+import { PERMISSIONS } from '../shared/types';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAppStore();
@@ -19,13 +21,41 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function RequirePermission({ permission, children }: { permission: typeof PERMISSIONS[keyof typeof PERMISSIONS]; children: React.ReactNode }) {
+  const { user, isAuthenticated } = useAppStore();
+  const location = useLocation();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
+  if (!hasPermission(user?.role, permission)) {
+    return <Navigate to="/devices" replace />;
+  }
+
+  return <>{children}</>;
+}
+
 function AppRoutes() {
-  const { initAuth } = useAppStore();
+  const { initAuth, user } = useAppStore();
   const location = useLocation();
 
   useEffect(() => {
     initAuth();
   }, [initAuth]);
+
+  const getDefaultRoute = () => {
+    if (hasPermission(user?.role, PERMISSIONS.VIEW_DASHBOARD)) {
+      return '/dashboard';
+    }
+    if (hasPermission(user?.role, PERMISSIONS.VIEW_DEVICES)) {
+      return '/devices';
+    }
+    if (hasPermission(user?.role, PERMISSIONS.VIEW_REALTIME)) {
+      return '/realtime';
+    }
+    return '/login';
+  };
 
   return (
     <Routes location={location}>
@@ -38,12 +68,40 @@ function AppRoutes() {
           </RequireAuth>
         }
       >
-        <Route index element={<Navigate to="/dashboard" replace />} />
-        <Route path="dashboard" element={<Dashboard />} />
-        <Route path="devices" element={<Devices />} />
-        <Route path="devices/:id" element={<DeviceDetail />} />
-        <Route path="realtime" element={<Realtime />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route index element={<Navigate to={getDefaultRoute()} replace />} />
+        <Route
+          path="dashboard"
+          element={
+            <RequirePermission permission={PERMISSIONS.VIEW_DASHBOARD}>
+              <Dashboard />
+            </RequirePermission>
+          }
+        />
+        <Route
+          path="devices"
+          element={
+            <RequirePermission permission={PERMISSIONS.VIEW_DEVICES}>
+              <Devices />
+            </RequirePermission>
+          }
+        />
+        <Route
+          path="devices/:id"
+          element={
+            <RequirePermission permission={PERMISSIONS.VIEW_DEVICES}>
+              <DeviceDetail />
+            </RequirePermission>
+          }
+        />
+        <Route
+          path="realtime"
+          element={
+            <RequirePermission permission={PERMISSIONS.VIEW_REALTIME}>
+              <Realtime />
+            </RequirePermission>
+          }
+        />
+        <Route path="*" element={<Navigate to={getDefaultRoute()} replace />} />
       </Route>
     </Routes>
   );

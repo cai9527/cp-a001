@@ -1,19 +1,21 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store';
-import type { Device, CreateDeviceRequest } from '../../shared/types';
+import { PERMISSIONS, type Device, type CreateDeviceRequest } from '../../shared/types';
 import { ArrowLeft, Edit2, MapPin, Cpu, Wifi, Clock, Settings, Network } from 'lucide-react';
 import { DeviceStatusBadge, DataStatusBadge } from '@/components/StatusBadge';
 import Modal from '@/components/Modal';
 import DeviceForm from '@/components/DeviceForm';
-import { cn } from '@/lib/utils';
+import { cn, hasPermission } from '@/lib/utils';
 
 export default function DeviceDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { fetchDeviceById, updateDevice, fetchMonitoringData, monitoringData, loading } = useAppStore();
+  const { user, fetchDeviceById, updateDevice, fetchMonitoringData, monitoringData, loading } = useAppStore();
   const [device, setDevice] = useState<Device | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
+
+  const canUpdate = hasPermission(user?.role, PERMISSIONS.UPDATE_DEVICE);
 
   useEffect(() => {
     if (id) {
@@ -69,13 +71,15 @@ export default function DeviceDetail() {
           </div>
           <p className="text-sm text-dark-400 mt-1">设备编号：{device.code}</p>
         </div>
-        <button
-          onClick={() => setShowEditModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors text-sm font-medium"
-        >
-          <Edit2 size={16} />
-          编辑设备
-        </button>
+        {canUpdate && (
+          <button
+            onClick={() => setShowEditModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors text-sm font-medium"
+          >
+            <Edit2 size={16} />
+            编辑设备
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

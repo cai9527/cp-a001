@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -10,14 +10,23 @@ import {
   ChevronLeft,
   Wind,
   LogOut,
+  Shield,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, hasPermission } from '@/lib/utils';
 import { useAppStore } from '@/store';
+import { PERMISSIONS } from '../../shared/types';
 
-const navItems = [
-  { path: '/dashboard', label: '数据监测', icon: LayoutDashboard },
-  { path: '/devices', label: '设备管理', icon: Cpu },
-  { path: '/realtime', label: '实时监测', icon: Activity },
+interface NavItem {
+  path: string;
+  label: string;
+  icon: React.ComponentType<any>;
+  permission: typeof PERMISSIONS[keyof typeof PERMISSIONS];
+}
+
+const allNavItems: NavItem[] = [
+  { path: '/dashboard', label: '数据监测', icon: LayoutDashboard, permission: PERMISSIONS.VIEW_DASHBOARD },
+  { path: '/devices', label: '设备管理', icon: Cpu, permission: PERMISSIONS.VIEW_DEVICES },
+  { path: '/realtime', label: '实时监测', icon: Activity, permission: PERMISSIONS.VIEW_REALTIME },
 ];
 
 export default function Layout() {
@@ -25,6 +34,10 @@ export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAppStore();
+
+  const navItems = useMemo(() => {
+    return allNavItems.filter((item) => hasPermission(user?.role, item.permission));
+  }, [user?.role]);
 
   const handleLogout = async () => {
     await logout();
@@ -102,7 +115,7 @@ export default function Layout() {
         <header className="h-16 bg-white border-b border-dark-100 flex items-center justify-between px-6 flex-shrink-0">
           <div className="flex items-center gap-4">
             <h1 className="text-lg font-semibold text-dark-600">
-              {navItems.find((n) => location.pathname.startsWith(n.path))?.label || '扬尘监测系统'}
+              {allNavItems.find((n) => location.pathname.startsWith(n.path))?.label || '扬尘监测系统'}
             </h1>
           </div>
           <div className="flex items-center gap-3">
@@ -114,7 +127,15 @@ export default function Layout() {
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center">
                 <User size={16} className="text-white" />
               </div>
-              <span className="text-sm font-medium text-dark-500">{user?.nickname || '用户'}</span>
+              <div className="flex flex-col">
+                <span className="text-sm font-medium text-dark-500">{user?.nickname || '用户'}</span>
+                <div className="flex items-center gap-1">
+                  <Shield size={12} className={cn(user?.role === 'admin' ? 'text-primary-500' : 'text-dark-300')} />
+                  <span className={cn('text-xs', user?.role === 'admin' ? 'text-primary-500' : 'text-dark-400')}>
+                    {user?.role === 'admin' ? '管理员' : '普通用户'}
+                  </span>
+                </div>
+              </div>
               <button
                 onClick={handleLogout}
                 className="ml-2 p-2 text-dark-400 hover:text-danger-500 hover:bg-danger-50 rounded-lg transition-colors"

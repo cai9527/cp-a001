@@ -5,16 +5,21 @@ import { Search, Plus, Edit2, Trash2, Eye, Filter } from 'lucide-react';
 import Modal from '@/components/Modal';
 import DeviceForm from '@/components/DeviceForm';
 import { DeviceStatusBadge } from '@/components/StatusBadge';
-import type { CreateDeviceRequest, Device } from '../../shared/types';
+import { hasPermission } from '@/lib/utils';
+import { PERMISSIONS, type CreateDeviceRequest, type Device } from '../../shared/types';
 
 export default function Devices() {
   const navigate = useNavigate();
-  const { devices, deviceTotal, loading, fetchDevices, createDevice, updateDevice, deleteDevice } = useAppStore();
+  const { user, devices, deviceTotal, loading, fetchDevices, createDevice, updateDevice, deleteDevice } = useAppStore();
   const [search, setSearch] = useState('');
   const [areaFilter, setAreaFilter] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingDevice, setEditingDevice] = useState<Device | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+
+  const canCreate = hasPermission(user?.role, PERMISSIONS.CREATE_DEVICE);
+  const canUpdate = hasPermission(user?.role, PERMISSIONS.UPDATE_DEVICE);
+  const canDelete = hasPermission(user?.role, PERMISSIONS.DELETE_DEVICE);
 
   useEffect(() => {
     fetchDevices({ search, area: areaFilter });
@@ -44,13 +49,15 @@ export default function Devices() {
           <h2 className="text-xl font-bold text-dark-600">设备管理</h2>
           <p className="text-sm text-dark-400 mt-1">管理所有扬尘监测设备，共 {deviceTotal} 台</p>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors text-sm font-medium shadow-sm shadow-primary-500/20"
-        >
-          <Plus size={18} />
-          新增设备
-        </button>
+        {canCreate && (
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors text-sm font-medium shadow-sm shadow-primary-500/20"
+          >
+            <Plus size={18} />
+            新增设备
+          </button>
+        )}
       </div>
 
       <div className="bg-white rounded-xl shadow-card overflow-hidden">
@@ -149,20 +156,24 @@ export default function Devices() {
                         >
                           <Eye size={16} />
                         </button>
-                        <button
-                          onClick={() => setEditingDevice(device)}
-                          className="p-2 text-dark-400 hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-colors"
-                          title="编辑"
-                        >
-                          <Edit2 size={16} />
-                        </button>
-                        <button
-                          onClick={() => setDeleteConfirm(device.id)}
-                          className="p-2 text-dark-400 hover:text-danger-500 hover:bg-danger-50 rounded-lg transition-colors"
-                          title="删除"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                        {canUpdate && (
+                          <button
+                            onClick={() => setEditingDevice(device)}
+                            className="p-2 text-dark-400 hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-colors"
+                            title="编辑"
+                          >
+                            <Edit2 size={16} />
+                          </button>
+                        )}
+                        {canDelete && (
+                          <button
+                            onClick={() => setDeleteConfirm(device.id)}
+                            className="p-2 text-dark-400 hover:text-danger-500 hover:bg-danger-50 rounded-lg transition-colors"
+                            title="删除"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

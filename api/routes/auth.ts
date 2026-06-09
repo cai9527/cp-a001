@@ -1,5 +1,6 @@
-import { Router, type Request, type Response } from 'express'
+import { Router, type Request, type Response, type NextFunction } from 'express'
 import crypto from 'crypto'
+import type { UserRole } from '../../shared/types'
 
 const router = Router()
 
@@ -8,7 +9,15 @@ interface CaptchaStore {
   expireAt: number
 }
 
+interface TokenStore {
+  userId: string
+  username: string
+  nickname: string
+  role: UserRole
+}
+
 const captchaMap = new Map<string, CaptchaStore>()
+export const tokenMap = new Map<string, TokenStore>()
 
 const CAPTCHA_EXPIRE_MS = 5 * 60 * 1000
 
@@ -138,6 +147,13 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
 
   const token = crypto.randomBytes(32).toString('hex')
 
+  tokenMap.set(token, {
+    userId: user.id,
+    username: user.username,
+    nickname: user.nickname,
+    role: user.role as UserRole,
+  })
+
   res.json({
     code: 0,
     message: '登录成功',
@@ -154,6 +170,11 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
 })
 
 router.post('/logout', async (req: Request, res: Response): Promise<void> => {
+  const authHeader = req.headers.authorization
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.slice(7)
+    tokenMap.delete(token)
+  }
   res.json({
     code: 0,
     message: '退出成功',

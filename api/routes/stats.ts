@@ -1,10 +1,14 @@
-import { Router, type Request, type Response } from 'express';
+import { Router, type Response } from 'express';
 import { dataStore } from '../data/store';
+import { authMiddleware, requirePermission, type AuthenticatedRequest } from '../middleware/auth.js';
+import { PERMISSIONS } from '../../shared/types';
 import type { ApiResponse, OverviewStats, AreaStats } from '../../shared/types';
 
 const router = Router();
 
-router.get('/overview', (_req: Request, res: Response) => {
+router.use(authMiddleware);
+
+router.get('/overview', requirePermission(PERMISSIONS.VIEW_DASHBOARD), (_req: AuthenticatedRequest, res: Response) => {
   const devices = dataStore.getDevices();
   const monitoringData = dataStore.getMonitoringData();
 
@@ -48,7 +52,7 @@ router.get('/overview', (_req: Request, res: Response) => {
   res.json(response);
 });
 
-router.get('/area', (_req: Request, res: Response) => {
+router.get('/area', requirePermission(PERMISSIONS.VIEW_DASHBOARD), (_req: AuthenticatedRequest, res: Response) => {
   const devices = dataStore.getDevices();
   const monitoringData = dataStore.getMonitoringData();
 

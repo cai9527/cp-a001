@@ -1,10 +1,14 @@
-import { Router, type Request, type Response } from 'express';
+import { Router, type Response } from 'express';
 import { dataStore } from '../data/store';
+import { authMiddleware, requirePermission, type AuthenticatedRequest } from '../middleware/auth.js';
+import { PERMISSIONS } from '../../shared/types';
 import type { CreateDeviceRequest, UpdateDeviceRequest, ApiResponse, PaginatedResponse, Device } from '../../shared/types';
 
 const router = Router();
 
-router.get('/', (req: Request, res: Response) => {
+router.use(authMiddleware);
+
+router.get('/', requirePermission(PERMISSIONS.VIEW_DEVICES), (req: AuthenticatedRequest, res: Response) => {
   const { search = '', area = '', page = '1', pageSize = '10' } = req.query;
   let devices = dataStore.getDevices();
 
@@ -41,7 +45,7 @@ router.get('/', (req: Request, res: Response) => {
   res.json(response);
 });
 
-router.get('/:id', (req: Request, res: Response) => {
+router.get('/:id', requirePermission(PERMISSIONS.VIEW_DEVICES), (req: AuthenticatedRequest, res: Response) => {
   const device = dataStore.getDeviceById(req.params.id);
   if (!device) {
     res.status(404).json({ code: 404, message: '设备不存在', data: null });
@@ -50,7 +54,7 @@ router.get('/:id', (req: Request, res: Response) => {
   res.json({ code: 0, message: 'success', data: device });
 });
 
-router.post('/', (req: Request, res: Response) => {
+router.post('/', requirePermission(PERMISSIONS.CREATE_DEVICE), (req: AuthenticatedRequest, res: Response) => {
   const data = req.body as CreateDeviceRequest;
   if (!data.name || !data.code || !data.location || !data.area) {
     res.status(400).json({ code: 400, message: '缺少必填字段', data: null });
@@ -60,7 +64,7 @@ router.post('/', (req: Request, res: Response) => {
   res.status(201).json({ code: 0, message: '创建成功', data: newDevice });
 });
 
-router.put('/:id', (req: Request, res: Response) => {
+router.put('/:id', requirePermission(PERMISSIONS.UPDATE_DEVICE), (req: AuthenticatedRequest, res: Response) => {
   const data = req.body as UpdateDeviceRequest;
   const updated = dataStore.updateDevice(req.params.id, data);
   if (!updated) {
@@ -70,7 +74,7 @@ router.put('/:id', (req: Request, res: Response) => {
   res.json({ code: 0, message: '更新成功', data: updated });
 });
 
-router.delete('/:id', (req: Request, res: Response) => {
+router.delete('/:id', requirePermission(PERMISSIONS.DELETE_DEVICE), (req: AuthenticatedRequest, res: Response) => {
   const deleted = dataStore.deleteDevice(req.params.id);
   if (!deleted) {
     res.status(404).json({ code: 404, message: '设备不存在', data: null });

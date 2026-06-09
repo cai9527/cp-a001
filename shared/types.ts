@@ -1,6 +1,38 @@
 export type DeviceStatus = 'online' | 'offline' | 'warning';
 export type DataStatus = 'normal' | 'warning' | 'danger';
 export type Protocol = 'MQTT' | 'HTTP' | 'Modbus';
+export type UserRole = 'admin' | 'user';
+
+export const ROLES = {
+  ADMIN: 'admin' as UserRole,
+  USER: 'user' as UserRole,
+} as const;
+
+export const PERMISSIONS = {
+  VIEW_DASHBOARD: 'view:dashboard',
+  VIEW_DEVICES: 'view:devices',
+  VIEW_REALTIME: 'view:realtime',
+  CREATE_DEVICE: 'create:device',
+  UPDATE_DEVICE: 'update:device',
+  DELETE_DEVICE: 'delete:device',
+} as const;
+
+export type Permission = typeof PERMISSIONS[keyof typeof PERMISSIONS];
+
+export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
+  admin: [
+    PERMISSIONS.VIEW_DASHBOARD,
+    PERMISSIONS.VIEW_DEVICES,
+    PERMISSIONS.VIEW_REALTIME,
+    PERMISSIONS.CREATE_DEVICE,
+    PERMISSIONS.UPDATE_DEVICE,
+    PERMISSIONS.DELETE_DEVICE,
+  ],
+  user: [
+    PERMISSIONS.VIEW_DEVICES,
+    PERMISSIONS.VIEW_REALTIME,
+  ],
+};
 
 export interface Device {
   id: string;
@@ -94,7 +126,7 @@ export interface UserInfo {
   id: string;
   username: string;
   nickname: string;
-  role: string;
+  role: UserRole;
 }
 
 export interface CaptchaResponse {
