@@ -5,14 +5,15 @@ import { Search, Plus, Edit2, Trash2, Eye, Filter } from 'lucide-react';
 import Modal from '@/components/Modal';
 import DeviceForm from '@/components/DeviceForm';
 import { DeviceStatusBadge } from '@/components/StatusBadge';
-import type { CreateDeviceRequest } from '../../shared/types';
+import type { CreateDeviceRequest, Device } from '../../shared/types';
 
 export default function Devices() {
   const navigate = useNavigate();
-  const { devices, deviceTotal, loading, fetchDevices, createDevice, deleteDevice } = useAppStore();
+  const { devices, deviceTotal, loading, fetchDevices, createDevice, updateDevice, deleteDevice } = useAppStore();
   const [search, setSearch] = useState('');
   const [areaFilter, setAreaFilter] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingDevice, setEditingDevice] = useState<Device | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   useEffect(() => {
@@ -22,6 +23,13 @@ export default function Devices() {
   const handleCreate = async (data: CreateDeviceRequest) => {
     await createDevice(data);
     setShowCreateModal(false);
+  };
+
+  const handleUpdate = async (data: CreateDeviceRequest) => {
+    if (editingDevice) {
+      await updateDevice(editingDevice.id, data);
+      setEditingDevice(null);
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -142,7 +150,7 @@ export default function Devices() {
                           <Eye size={16} />
                         </button>
                         <button
-                          onClick={() => navigate(`/devices/${device.id}`)}
+                          onClick={() => setEditingDevice(device)}
                           className="p-2 text-dark-400 hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-colors"
                           title="编辑"
                         >
@@ -201,6 +209,22 @@ export default function Devices() {
             </button>
           </div>
         </div>
+      </Modal>
+
+      <Modal
+        open={!!editingDevice}
+        title={`编辑设备 - ${editingDevice?.name || ''}`}
+        onClose={() => setEditingDevice(null)}
+        width="max-w-3xl"
+      >
+        {editingDevice && (
+          <DeviceForm
+            initialData={editingDevice}
+            onSubmit={handleUpdate}
+            onCancel={() => setEditingDevice(null)}
+            loading={loading}
+          />
+        )}
       </Modal>
     </div>
   );

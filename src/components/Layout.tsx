@@ -44,7 +44,7 @@ export default function Layout() {
           </div>
         </div>
 
-        <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
+        <nav className="flex-1 py-4 px-2 space-y-1.5 overflow-y-auto">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname.startsWith(item.path);
@@ -53,14 +53,27 @@ export default function Layout() {
                 key={item.path}
                 to={item.path}
                 className={cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200',
+                  'relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group',
                   isActive
-                    ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
+                    ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg shadow-primary-500/40'
                     : 'text-dark-200 hover:bg-dark-600 hover:text-white',
                 )}
               >
-                <Icon size={18} className="flex-shrink-0" />
-                {!collapsed && <span>{item.label}</span>}
+                {isActive && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white rounded-r-full" />
+                )}
+                <Icon
+                  size={18}
+                  className={cn(
+                    'flex-shrink-0 transition-all duration-200',
+                    isActive && 'drop-shadow-sm scale-110',
+                  )}
+                />
+                {!collapsed && (
+                  <span className={cn(isActive && 'font-semibold')}>
+                    {item.label}
+                  </span>
+                )}
               </NavLink>
             );
           })}
