@@ -30,35 +30,42 @@ function generateSvgCaptcha(code: string): string {
   const chars = code.split('')
   let textPath = ''
   chars.forEach((char, i) => {
-    const x = 20 + i * 28
-    const y = 32 + Math.floor(Math.random() * 6) - 3
-    const rotate = Math.floor(Math.random() * 30) - 15
+    const x = 18 + i * 30
+    const y = 30 + Math.floor(Math.random() * 8) - 4
+    const rotate = Math.floor(Math.random() * 40) - 20
     const color = colors[Math.floor(Math.random() * colors.length)]
-    textPath += `<text x="${x}" y="${y}" font-size="28" font-weight="bold" fill="${color}" transform="rotate(${rotate} ${x + 8} ${y})">${char}</text>`
+    textPath += `<text x="${x}" y="${y}" font-size="26" font-family="Arial, Helvetica, sans-serif" font-weight="bold" fill="${color}" transform="rotate(${rotate} ${x + 8} ${y})">${char}</text>`
   })
 
   let lines = ''
-  for (let i = 0; i < 4; i++) {
-    const x1 = Math.floor(Math.random() * 140)
-    const y1 = Math.floor(Math.random() * 40)
-    const x2 = Math.floor(Math.random() * 140)
-    const y2 = Math.floor(Math.random() * 40)
+  for (let i = 0; i < 5; i++) {
+    const x1 = Math.floor(Math.random() * 150)
+    const y1 = Math.floor(Math.random() * 50)
+    const x2 = Math.floor(Math.random() * 150)
+    const y2 = Math.floor(Math.random() * 50)
     const color = colors[Math.floor(Math.random() * colors.length)]
-    lines += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="1.5" opacity="0.6" />`
+    lines += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="1.5" opacity="0.5" />`
   }
 
   let dots = ''
-  for (let i = 0; i < 30; i++) {
-    const cx = Math.floor(Math.random() * 140)
-    const cy = Math.floor(Math.random() * 40)
-    const r = Math.random() * 1.5 + 0.5
+  for (let i = 0; i < 40; i++) {
+    const cx = Math.floor(Math.random() * 150)
+    const cy = Math.floor(Math.random() * 50)
+    const r = Math.random() * 1.8 + 0.5
     const color = colors[Math.floor(Math.random() * colors.length)]
-    dots += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}" opacity="0.7" />`
+    dots += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}" opacity="0.6" />`
   }
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="140" height="40" viewBox="0 0 140 40">
-  <rect width="140" height="40" fill="#f3f4f6" rx="6" ry="6"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="150" height="50" viewBox="0 0 150 50">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f8fafc;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f1f5f9;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="150" height="50" fill="url(#bg)" rx="8" ry="8"/>
+  <rect width="148" height="48" x="1" y="1" fill="none" stroke="#e2e8f0" stroke-width="1" rx="7" ry="7"/>
   ${lines}
   ${dots}
   ${textPath}
@@ -69,7 +76,7 @@ router.get('/captcha', async (req: Request, res: Response): Promise<void> => {
   const code = generateCaptchaCode()
   const captchaId = crypto.randomUUID()
   const svg = generateSvgCaptcha(code)
-  const imageBase64 = `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`
+  const imageDataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
 
   captchaMap.set(captchaId, {
     code,
@@ -81,7 +88,7 @@ router.get('/captcha', async (req: Request, res: Response): Promise<void> => {
     message: 'success',
     data: {
       captchaId,
-      image: imageBase64,
+      image: imageDataUrl,
     },
   })
 })

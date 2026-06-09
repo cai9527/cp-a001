@@ -153,15 +153,25 @@ export default function Login() {
                   type="button"
                   onClick={handleRefreshCaptcha}
                   className={cn(
-                    'flex items-center gap-2 px-4 py-2.5 rounded-lg border border-dark-100 bg-dark-50 hover:bg-dark-100 transition-colors',
-                    'min-w-[140px] justify-center overflow-hidden',
+                    'flex items-center gap-2 px-3 py-2 rounded-lg border border-dark-100 bg-white hover:bg-dark-50 transition-colors',
+                    'w-[150px] h-[42px] justify-center overflow-hidden shadow-sm',
                   )}
                   title="点击刷新验证码"
                 >
                   {captchaImage ? (
-                    <img src={captchaImage} alt="验证码" className="h-7" />
+                    <img
+                      src={captchaImage}
+                      alt="验证码"
+                      className="h-full w-full object-contain"
+                      onError={() => {
+                        setCaptchaImage('');
+                      }}
+                    />
                   ) : (
-                    <RefreshCw size={18} className="text-dark-400 animate-spin" />
+                    <div className="flex items-center gap-1.5 text-dark-400 text-sm">
+                      <RefreshCw size={16} className="animate-spin" />
+                      <span>加载中</span>
+                    </div>
                   )}
                 </button>
               </div>
