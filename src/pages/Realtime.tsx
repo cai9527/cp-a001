@@ -172,7 +172,7 @@ export default function Realtime() {
     const interval = setInterval(() => {
       fetchMonitoringData();
       setLastUpdate(new Date());
-    }, 5000);
+    }, 3000);
     return () => clearInterval(interval);
   }, [autoRefresh, fetchMonitoringData]);
 
@@ -192,7 +192,7 @@ export default function Realtime() {
         <div>
           <h2 className="text-xl font-bold text-dark-600">实时数据监测</h2>
           <p className="text-sm text-dark-400 mt-1">
-            实时展示各监测设备数据，每 5 秒自动刷新
+            实时展示各监测设备数据，每 3 秒自动刷新
             {lastUpdate && <span className="ml-2">· 最后更新: {lastUpdate.toLocaleTimeString('zh-CN')}</span>}
           </p>
         </div>

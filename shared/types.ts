@@ -12,6 +12,7 @@ export const PERMISSIONS = {
   VIEW_DASHBOARD: 'view:dashboard',
   VIEW_DEVICES: 'view:devices',
   VIEW_REALTIME: 'view:realtime',
+  VIEW_VISUALIZATION: 'view:visualization',
   CREATE_DEVICE: 'create:device',
   UPDATE_DEVICE: 'update:device',
   DELETE_DEVICE: 'delete:device',
@@ -24,6 +25,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     PERMISSIONS.VIEW_DASHBOARD,
     PERMISSIONS.VIEW_DEVICES,
     PERMISSIONS.VIEW_REALTIME,
+    PERMISSIONS.VIEW_VISUALIZATION,
     PERMISSIONS.CREATE_DEVICE,
     PERMISSIONS.UPDATE_DEVICE,
     PERMISSIONS.DELETE_DEVICE,
@@ -31,6 +33,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   user: [
     PERMISSIONS.VIEW_DEVICES,
     PERMISSIONS.VIEW_REALTIME,
+    PERMISSIONS.VIEW_VISUALIZATION,
     PERMISSIONS.UPDATE_DEVICE,
   ],
 };
@@ -133,4 +136,59 @@ export interface UserInfo {
 export interface CaptchaResponse {
   captchaId: string;
   image: string;
+}
+
+export type MetricType = 'pm25' | 'pm10' | 'noise';
+export type TimeRange = '1h' | '6h' | '12h' | '24h' | '7d';
+
+export interface TimeSeriesPoint {
+  timestamp: string;
+  value: number;
+}
+
+export interface DeviceTimeSeries {
+  deviceId: string;
+  deviceName: string;
+  pm25: TimeSeriesPoint[];
+  pm10: TimeSeriesPoint[];
+  noise: TimeSeriesPoint[];
+}
+
+export interface AreaTimeSeries {
+  area: string;
+  pm25: TimeSeriesPoint[];
+  pm10: TimeSeriesPoint[];
+  noise: TimeSeriesPoint[];
+}
+
+export interface StatusDistribution {
+  status: DataStatus;
+  count: number;
+  percentage: number;
+}
+
+export interface DeviceStatusDistribution {
+  status: DeviceStatus;
+  count: number;
+  percentage: number;
+}
+
+export interface HeatmapPoint {
+  deviceName: string;
+  timestamp: string;
+  value: number;
+}
+
+export interface DeviceHeatmapData {
+  deviceName: string;
+  timestamps: string[];
+  values: number[];
+}
+
+export interface ChartFilterParams {
+  areas?: string[];
+  deviceIds?: string[];
+  metrics?: MetricType[];
+  timeRange?: TimeRange;
+  statuses?: DataStatus[];
 }

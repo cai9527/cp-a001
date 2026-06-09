@@ -7,6 +7,15 @@ export default {
     container: {
       center: true,
     },
+    screens: {
+      'sm': '640px',
+      'md': '768px',
+      'lg': '1024px',
+      'xl': '1280px',
+      '2xl': '1536px',
+      '3xl': '1920px',
+      '4xl': '2560px',
+    },
     extend: {
       colors: {
         primary: {
@@ -50,6 +59,27 @@ export default {
           700: "#171A21",
           800: "#0F1218",
           900: "#0A0C10",
+        },
+        purple: {
+          50: "#F5E8FF",
+          100: "#E4C7FF",
+          400: "#9F55FF",
+          500: "#722ED1",
+          600: "#5A1FB0",
+        },
+        orange: {
+          50: "#FFF3E8",
+          100: "#FFD9B3",
+          400: "#FF9A2E",
+          500: "#FF7D00",
+          600: "#D96A00",
+        },
+        blue: {
+          50: "#E8F3FF",
+          100: "#B9D8FF",
+          400: "#2E87FF",
+          500: "#165DFF",
+          600: "#0E42D2",
         },
       },
       fontFamily: {

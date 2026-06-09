@@ -14,6 +14,7 @@ import {
   AlertTriangle,
   CheckCircle,
   Info,
+  BarChart3,
 } from 'lucide-react';
 import { cn, hasPermission } from '@/lib/utils';
 import { useAppStore } from '@/store';
@@ -29,6 +30,7 @@ interface NavItem {
 
 const allNavItems: NavItem[] = [
   { path: '/dashboard', label: '数据监测', icon: LayoutDashboard, permission: PERMISSIONS.VIEW_DASHBOARD },
+  { path: '/visualization', label: '数据可视化', icon: BarChart3, permission: PERMISSIONS.VIEW_VISUALIZATION },
   { path: '/devices', label: '设备管理', icon: Cpu, permission: PERMISSIONS.VIEW_DEVICES },
   { path: '/realtime', label: '实时监测', icon: Activity, permission: PERMISSIONS.VIEW_REALTIME },
 ];
@@ -237,8 +239,8 @@ export default function Layout() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="animate-fade-in">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-5 xl:p-6 3xl:p-8">
+          <div className="animate-fade-in max-w-[2560px] mx-auto">
             <Outlet />
           </div>
         </main>

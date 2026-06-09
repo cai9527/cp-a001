@@ -10,6 +10,13 @@ import type {
   LoginRequest,
   LoginResponse,
   CaptchaResponse,
+  DeviceTimeSeries,
+  AreaTimeSeries,
+  StatusDistribution,
+  DeviceStatusDistribution,
+  DeviceHeatmapData,
+  MetricType,
+  TimeRange,
 } from '../../shared/types';
 
 const API_BASE = '/api';
@@ -92,6 +99,39 @@ export const statsApi = {
 
   getArea: () => {
     return request<AreaStats[]>('/stats/area');
+  },
+
+  getDeviceTimeSeries: (params?: { deviceIds?: string[]; timeRange?: TimeRange }) => {
+    const query = new URLSearchParams();
+    if (params?.deviceIds?.length) query.set('deviceIds', params.deviceIds.join(','));
+    if (params?.timeRange) query.set('timeRange', params.timeRange);
+    const queryStr = query.toString();
+    return request<DeviceTimeSeries[]>(`/stats/device-time-series${queryStr ? `?${queryStr}` : ''}`);
+  },
+
+  getAreaTimeSeries: (params?: { areas?: string[]; timeRange?: TimeRange }) => {
+    const query = new URLSearchParams();
+    if (params?.areas?.length) query.set('areas', params.areas.join(','));
+    if (params?.timeRange) query.set('timeRange', params.timeRange);
+    const queryStr = query.toString();
+    return request<AreaTimeSeries[]>(`/stats/area-time-series${queryStr ? `?${queryStr}` : ''}`);
+  },
+
+  getStatusDistribution: () => {
+    return request<StatusDistribution[]>('/stats/status-distribution');
+  },
+
+  getDeviceStatusDistribution: () => {
+    return request<DeviceStatusDistribution[]>('/stats/device-status-distribution');
+  },
+
+  getHeatmap: (params?: { metric?: MetricType; timeRange?: TimeRange; deviceIds?: string[] }) => {
+    const query = new URLSearchParams();
+    if (params?.metric) query.set('metric', params.metric);
+    if (params?.timeRange) query.set('timeRange', params.timeRange);
+    if (params?.deviceIds?.length) query.set('deviceIds', params.deviceIds.join(','));
+    const queryStr = query.toString();
+    return request<DeviceHeatmapData[]>(`/stats/heatmap${queryStr ? `?${queryStr}` : ''}`);
   },
 };
 

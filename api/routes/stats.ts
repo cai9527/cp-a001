@@ -2,7 +2,18 @@ import { Router, type Response } from 'express';
 import { dataStore } from '../data/store';
 import { authMiddleware, requirePermission, type AuthenticatedRequest } from '../middleware/auth.js';
 import { PERMISSIONS } from '../../shared/types';
-import type { ApiResponse, OverviewStats, AreaStats } from '../../shared/types';
+import type {
+  ApiResponse,
+  OverviewStats,
+  AreaStats,
+  DeviceTimeSeries,
+  AreaTimeSeries,
+  StatusDistribution,
+  DeviceStatusDistribution,
+  DeviceHeatmapData,
+  MetricType,
+  TimeRange,
+} from '../../shared/types';
 
 const router = Router();
 
@@ -75,6 +86,43 @@ router.get('/area', requirePermission(PERMISSIONS.VIEW_DASHBOARD), (_req: Authen
     message: 'success',
     data: areaStats,
   };
+  res.json(response);
+});
+
+router.get('/device-time-series', requirePermission(PERMISSIONS.VIEW_VISUALIZATION), (req: AuthenticatedRequest, res: Response) => {
+  const deviceIds = req.query.deviceIds ? (req.query.deviceIds as string).split(',') : undefined;
+  const timeRange = (req.query.timeRange as TimeRange) || '24h';
+  const data = dataStore.getDeviceTimeSeries(deviceIds, timeRange);
+  const response: ApiResponse<DeviceTimeSeries[]> = { code: 0, message: 'success', data };
+  res.json(response);
+});
+
+router.get('/area-time-series', requirePermission(PERMISSIONS.VIEW_VISUALIZATION), (req: AuthenticatedRequest, res: Response) => {
+  const areas = req.query.areas ? (req.query.areas as string).split(',') : undefined;
+  const timeRange = (req.query.timeRange as TimeRange) || '24h';
+  const data = dataStore.getAreaTimeSeries(areas, timeRange);
+  const response: ApiResponse<AreaTimeSeries[]> = { code: 0, message: 'success', data };
+  res.json(response);
+});
+
+router.get('/status-distribution', requirePermission(PERMISSIONS.VIEW_VISUALIZATION), (_req: AuthenticatedRequest, res: Response) => {
+  const data = dataStore.getStatusDistribution();
+  const response: ApiResponse<StatusDistribution[]> = { code: 0, message: 'success', data };
+  res.json(response);
+});
+
+router.get('/device-status-distribution', requirePermission(PERMISSIONS.VIEW_VISUALIZATION), (_req: AuthenticatedRequest, res: Response) => {
+  const data = dataStore.getDeviceStatusDistribution();
+  const response: ApiResponse<DeviceStatusDistribution[]> = { code: 0, message: 'success', data };
+  res.json(response);
+});
+
+router.get('/heatmap', requirePermission(PERMISSIONS.VIEW_VISUALIZATION), (req: AuthenticatedRequest, res: Response) => {
+  const metric = (req.query.metric as MetricType) || 'pm25';
+  const timeRange = (req.query.timeRange as TimeRange) || '24h';
+  const deviceIds = req.query.deviceIds ? (req.query.deviceIds as string).split(',') : undefined;
+  const data = dataStore.getHeatmapData(metric, timeRange, deviceIds);
+  const response: ApiResponse<DeviceHeatmapData[]> = { code: 0, message: 'success', data };
   res.json(response);
 });
 

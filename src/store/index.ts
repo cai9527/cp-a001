@@ -1,5 +1,21 @@
 import { create } from 'zustand';
-import type { Device, MonitoringData, OverviewStats, AreaStats, CreateDeviceRequest, UpdateDeviceRequest, UserInfo, LoginRequest } from '../../shared/types';
+import type {
+  Device,
+  MonitoringData,
+  OverviewStats,
+  AreaStats,
+  CreateDeviceRequest,
+  UpdateDeviceRequest,
+  UserInfo,
+  LoginRequest,
+  DeviceTimeSeries,
+  AreaTimeSeries,
+  StatusDistribution,
+  DeviceStatusDistribution,
+  DeviceHeatmapData,
+  MetricType,
+  TimeRange,
+} from '../../shared/types';
 import { deviceApi, dataApi, statsApi, authApi } from '@/services/api';
 
 interface AppState {
@@ -10,6 +26,12 @@ interface AppState {
   areaStats: AreaStats[];
   loading: boolean;
   error: string | null;
+
+  deviceTimeSeries: DeviceTimeSeries[];
+  areaTimeSeries: AreaTimeSeries[];
+  statusDistribution: StatusDistribution[];
+  deviceStatusDistribution: DeviceStatusDistribution[];
+  heatmapData: DeviceHeatmapData[];
 
   isAuthenticated: boolean;
   user: UserInfo | null;
@@ -27,6 +49,18 @@ interface AppState {
   fetchAreaStats: () => Promise<void>;
   fetchAllData: () => Promise<void>;
 
+  fetchDeviceTimeSeries: (params?: { deviceIds?: string[]; timeRange?: TimeRange }) => Promise<void>;
+  fetchAreaTimeSeries: (params?: { areas?: string[]; timeRange?: TimeRange }) => Promise<void>;
+  fetchStatusDistribution: () => Promise<void>;
+  fetchDeviceStatusDistribution: () => Promise<void>;
+  fetchHeatmapData: (params?: { metric?: MetricType; timeRange?: TimeRange; deviceIds?: string[] }) => Promise<void>;
+  fetchAllVisualizationData: (params?: {
+    deviceIds?: string[];
+    areas?: string[];
+    timeRange?: TimeRange;
+    metric?: MetricType;
+  }) => Promise<void>;
+
   login: (data: LoginRequest) => Promise<void>;
   logout: () => Promise<void>;
   initAuth: () => void;
@@ -40,6 +74,12 @@ export const useAppStore = create<AppState>((set, get) => ({
   areaStats: [],
   loading: false,
   error: null,
+
+  deviceTimeSeries: [],
+  areaTimeSeries: [],
+  statusDistribution: [],
+  deviceStatusDistribution: [],
+  heatmapData: [],
 
   isAuthenticated: false,
   user: null,
@@ -142,6 +182,66 @@ export const useAppStore = create<AppState>((set, get) => ({
       get().fetchMonitoringData(),
       get().fetchOverviewStats(),
       get().fetchAreaStats(),
+    ]);
+  },
+
+  fetchDeviceTimeSeries: async (params) => {
+    try {
+      const data = await statsApi.getDeviceTimeSeries(params);
+      set({ deviceTimeSeries: data });
+    } catch (err) {
+      set({ error: (err as Error).message });
+    }
+  },
+
+  fetchAreaTimeSeries: async (params) => {
+    try {
+      const data = await statsApi.getAreaTimeSeries(params);
+      set({ areaTimeSeries: data });
+    } catch (err) {
+      set({ error: (err as Error).message });
+    }
+  },
+
+  fetchStatusDistribution: async () => {
+    try {
+      const data = await statsApi.getStatusDistribution();
+      set({ statusDistribution: data });
+    } catch (err) {
+      set({ error: (err as Error).message });
+    }
+  },
+
+  fetchDeviceStatusDistribution: async () => {
+    try {
+      const data = await statsApi.getDeviceStatusDistribution();
+      set({ deviceStatusDistribution: data });
+    } catch (err) {
+      set({ error: (err as Error).message });
+    }
+  },
+
+  fetchHeatmapData: async (params) => {
+    try {
+      const data = await statsApi.getHeatmap(params);
+      set({ heatmapData: data });
+    } catch (err) {
+      set({ error: (err as Error).message });
+    }
+  },
+
+  fetchAllVisualizationData: async (params) => {
+    await Promise.all([
+      get().fetchMonitoringData(),
+      get().fetchDeviceTimeSeries({ deviceIds: params?.deviceIds, timeRange: params?.timeRange }),
+      get().fetchAreaTimeSeries({ areas: params?.areas, timeRange: params?.timeRange }),
+      get().fetchStatusDistribution(),
+      get().fetchDeviceStatusDistribution(),
+      get().fetchHeatmapData({
+        metric: params?.metric,
+        timeRange: params?.timeRange,
+        deviceIds: params?.deviceIds,
+      }),
     ]);
   },
 
